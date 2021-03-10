@@ -98,18 +98,37 @@ values_proj[0,:] = osebni_promet_proj + tovorni_promet_proj
 #%% stavbni sektor zmanjševanje emisij
 
 
-#%% plot data - positive emissions (historial)
+#%% international aviation
+#https://ourworldindata.org/grapher/per-capita-co2-international-aviation?stackMode=absolute&time=latest&region=Europe
+
+# SLO = (AUT + ITA + CRO + HUN)/4 =150 kg CO2/pers/ye = 0.15 t
+slo_emission2018 = 0.15*2.06*10**6/10**3 # ktCO2 eq
+aviation_emissions = np.linspace(1,2.35,34)/2.35*slo_emission2018
+
+#%% plot data - negative emissions (historical) aggregate
 
 fig,ax = plt.subplots(1,figsize=(22,11))
-plt.bar(years,2/3.*values[0,:],align="edge",label="osebni promet",color="blue",alpha=0.5)
-plt.bar(years,1/3.*values[0,:],bottom=2./3*values[0,:],align="edge",label="tovorni promet",color="blue")
-plt.bar(years,values[1,:],bottom=values[0,:],align="edge",label="energetika",color="gray")
-plt.bar(years,values[2,:],bottom=values[0:2,:].sum(axis=0),align="edge",label="industrijski procesi",color="red")
-plt.bar(years,values[3,:],bottom=values[0:3,:].sum(axis=0),align="edge",label="goriva v industriji",color="lime")
-plt.bar(years,values[4,:],bottom=values[0:4,:].sum(axis=0),align="edge",label="goriva v gospodinjstvih in ostala raba",color="fuchsia")
-plt.bar(years,values[5,:],bottom=values[0:5,:].sum(axis=0),align="edge",label="kmetijstvo",color="cyan")
-plt.bar(years,values[6,:],bottom=values[0:6,:].sum(axis=0),align="edge",label="odpadki",color="yellow")
-plt.bar(years,values[7,:],bottom=values[0:7,:].sum(axis=0),align="edge",label="drugo",color="brown")
+plt.bar(years,values_lulucf[0,:],align="edge",label="gozd, travniki, kmet. zemlj.\nmokrišča, naselja,\nlesni proizvodi (LULUCF)",color="darkgreen")
+#plt.bar(years,-values_lulucf[2,:],bottom=values_lulucf[0,:]-values_lulucf[1,:],align="edge",label="kmetijska zemljišča",color="yellow")
+#plt.bar(years,-values_lulucf[3,:],bottom=values_lulucf[0,:]-values_lulucf[1,:]-values_lulucf[2,:],align="edge",label="travišča",color="lightgreen")
+
+
+
+#%% plot data - positive emissions (historial)
+vals_lulucf_bot = values_lulucf[0,:]*(values_lulucf[0,:]>=0)
+
+plt.bar(years,2/3.*values[0,:],bottom=vals_lulucf_bot,align="edge",label="osebni promet",color="blue",alpha=0.5)
+plt.bar(years,1/3.*values[0,:],bottom=2./3*values[0,:]+vals_lulucf_bot,align="edge",label="tovorni promet",color="blue")
+plt.bar(years,aviation_emissions,bottom=values[0,:]+vals_lulucf_bot,align="edge",label="letalski promet",color="indigo")
+
+
+plt.bar(years,values[1,:],bottom=values[0,:]+vals_lulucf_bot+aviation_emissions,align="edge",label="energetika",color="gray")
+plt.bar(years,values[2,:],bottom=values[0:2,:].sum(axis=0)+vals_lulucf_bot+aviation_emissions,align="edge",label="industrijski procesi",color="red")
+plt.bar(years,values[3,:],bottom=values[0:3,:].sum(axis=0)+vals_lulucf_bot+aviation_emissions,align="edge",label="goriva v industriji",color="lime")
+plt.bar(years,values[4,:],bottom=values[0:4,:].sum(axis=0)+vals_lulucf_bot+aviation_emissions,align="edge",label="goriva v gospodinjstvih in ostala raba",color="fuchsia")
+plt.bar(years,values[5,:],bottom=values[0:5,:].sum(axis=0)+vals_lulucf_bot+aviation_emissions,align="edge",label="kmetijstvo",color="cyan")
+plt.bar(years,values[6,:],bottom=values[0:6,:].sum(axis=0)+vals_lulucf_bot+aviation_emissions,align="edge",label="odpadki",color="yellow")
+plt.bar(years,values[7,:],bottom=values[0:7,:].sum(axis=0)+vals_lulucf_bot+aviation_emissions,align="edge",label="drugo",color="brown")
 plt.grid()
 
 plt.xlabel("leto",fontsize=18)
@@ -118,14 +137,10 @@ plt.xlim([1984,2033])
 plt.ylim([-12000,33000])
 
 
-#%% plot data - negative emissions (historical) aggregate
-plt.bar(years,values_lulucf[0,:],align="edge",label="gozd, travniki, kmet. zemlj.\nmokrišča, naselja,\nlesni proizvodi (LULUCF)",color="darkgreen")
-#plt.bar(years,-values_lulucf[2,:],bottom=values_lulucf[0,:]-values_lulucf[1,:],align="edge",label="kmetijska zemljišča",color="yellow")
-#plt.bar(years,-values_lulucf[3,:],bottom=values_lulucf[0,:]-values_lulucf[1,:]-values_lulucf[2,:],align="edge",label="travišča",color="lightgreen")
 
 
 #%% plot net emission total
-plt.plot(years+0.5,values_lulucf[0,:]+values[-1,:],"k-",lw=7,label="neto emisije")
+plt.plot(years+0.5,values_lulucf[0,:]+values[-1,:]+aviation_emissions,"k-",lw=7,label="neto emisije")
 
 
 #%% plot emission goals
@@ -142,18 +157,15 @@ plt.rcParams.update({'hatch.color': 'white'})
 #
 
 
-
-
-plt.bar(years_proj,osebni_promet_proj,align="edge",label="osebni promet",color="blue",alpha=0.5,hatch="/")
-plt.bar(years_proj,tovorni_promet_proj,bottom=osebni_promet_proj,align="edge",label="tovorni promet [projekcija]",color="blue",hatch="/")
-plt.bar(years_proj,values_proj[1,:],bottom=values_proj[0,:],align="edge",label="energetika [projekcija]",color="gray",hatch="/")
-plt.bar(years_proj,values_proj[2,:],bottom=values_proj[0:2,:].sum(axis=0),align="edge",label="industrijski procesi [projekcija]",hatch="/",color="red")
-plt.bar(years_proj,values_proj[3,:],bottom=values_proj[0:3,:].sum(axis=0),align="edge",label="goriva v industriji [projekcija]",hatch="/",color="lime")
-plt.bar(years_proj,values_proj[4,:],bottom=values_proj[0:4,:].sum(axis=0),align="edge",label="goriva v gospodinjstvih in \n ostala raba [projekcija]",hatch="/",color="fuchsia")
-plt.bar(years_proj,values_proj[5,:],bottom=values_proj[0:5,:].sum(axis=0),align="edge",label="kmetijstvo [projekcija]",hatch="/",color="cyan")
-plt.bar(years_proj,values_proj[6,:],bottom=values_proj[0:6,:].sum(axis=0),align="edge",label="odpadki [projekcija]",hatch="/",color="yellow")
-plt.bar(years_proj,values_proj[7,:],bottom=values_proj[0:7,:].sum(axis=0),align="edge",label="drugo [projekcija]",hatch="/",color="brown")
-
+plt.bar(years_proj,osebni_promet_proj,align="edge",color="blue",alpha=0.5,hatch="/")
+plt.bar(years_proj,tovorni_promet_proj,bottom=osebni_promet_proj,align="edge",color="blue",hatch="/")
+plt.bar(years_proj,values_proj[1,:],bottom=values_proj[0,:],align="edge",color="gray",hatch="/")
+plt.bar(years_proj,values_proj[2,:],bottom=values_proj[0:2,:].sum(axis=0),align="edge",hatch="/",color="red")
+plt.bar(years_proj,values_proj[3,:],bottom=values_proj[0:3,:].sum(axis=0),align="edge",hatch="/",color="lime")
+plt.bar(years_proj,values_proj[4,:],bottom=values_proj[0:4,:].sum(axis=0),align="edge",hatch="/",color="fuchsia")
+plt.bar(years_proj,values_proj[5,:],bottom=values_proj[0:5,:].sum(axis=0),align="edge",hatch="/",color="cyan")
+plt.bar(years_proj,values_proj[6,:],bottom=values_proj[0:6,:].sum(axis=0),align="edge",hatch="/",color="yellow")
+plt.bar(years_proj,values_proj[7,:],bottom=values_proj[0:7,:].sum(axis=0),align="edge",hatch="/",color="brown")
 
 
 plt.vlines(switch_tes_year,0,23000,color="grey")
@@ -162,7 +174,7 @@ plt.text(switch_tes_year,24000,"[ukrep] \nTEŠ 5/6 izklop",fontsize=14,horizonta
 plt.text(swtich_tetol_year,24000,"[ukrep] \nTETOL izklop",fontsize=14,horizontalalignment="center",color="gray")
 
 
-plt.bar(years_proj,values_lulucf_proj,color="darkgreen",align="edge",hatch="/",label="LULUCF [projekcija]")
+plt.bar(years_proj,values_lulucf_proj,color="darkgreen",align="edge",hatch="/")
 plt.vlines(switch_ff_year,0,-6000,color="darkgreen")
 plt.text(switch_ff_year,-10000,"[ukrep] \n pogozdovanje\n 300 km$^2$/leto",fontsize=14,\
          horizontalalignment="center",color="darkgreen")
